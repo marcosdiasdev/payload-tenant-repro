@@ -16,10 +16,7 @@ export const ensureUniqueUsername: FieldHook = async ({ data, originalDoc, req, 
     typeof originalDoc?.tenant === 'object' ? originalDoc.tenant.id : originalDoc?.tenant
   const tenantIDToMatch = incomingTenantID || currentTenantID
 
-  // The seed command will fail in this find(), so we'll return the value to avoid it from being executed
-  return value;
-
-  const findDuplicateUsers = await req.payload.find({
+  const findDuplicateUsers = tenantIDToMatch ? await req.payload.find({
     collection: 'users',
     where: {
       and: [
@@ -35,9 +32,9 @@ export const ensureUniqueUsername: FieldHook = async ({ data, originalDoc, req, 
         },
       ],
     },
-  })
+  }) : undefined
 
-  if (findDuplicateUsers.docs.length > 0 && req.user) {
+  if (findDuplicateUsers && findDuplicateUsers.docs.length > 0 && req.user) {
     const tenantIDs = getUserTenantIDs(req.user)
     // if the user is an admin or has access to more than 1 tenant
     // provide a more specific error message
